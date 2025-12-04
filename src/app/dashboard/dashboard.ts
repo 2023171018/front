@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 
 interface TelemetryData {
   _id: string;
-  temperature: number;  // ⚠️ Corregido: el API devuelve "temperature", no "temperatura"
-  humidity: number;     // ⚠️ Corregido: el API devuelve "humidity", no "humedad"
+  temperature: number;
+  humidity: number;
   timestamp: string;
   __v: number;
 }
@@ -69,10 +69,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
             // El más reciente ahora está en la posición 0
             const latest = this.telemetryData[0];
-
-            // ⚠️ IMPORTANTE: Usar los nombres correctos del API
-            this.temperature = latest.temperature;  // No "temperatura"
-            this.humidity = latest.humidity;        // No "humedad"
+            this.temperature = latest.temperature;
+            this.humidity = latest.humidity;
           }
         },
         error: (e) => {
@@ -95,31 +93,52 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Formatea la fecha para mostrar solo hora
+  // Formatea la fecha para mostrar solo hora del INTERVALO (no modificar)
   formatTime(dateString: string | null | undefined): string {
     if (!dateString) return '---';
     try {
       const date = new Date(dateString);
-      return date.toLocaleTimeString('es-MX', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
+      const hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const seconds = date.getSeconds().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+      const hour12 = hours % 12 || 12;
+      return `${hour12.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
     } catch {
       return '---';
     }
   }
 
-  // Formatea la fecha completa
+  // Formatea la hora del HISTORIAL (sumar 6 horas y 2 segundos)
+  formatHistoryTime(dateString: string | null | undefined): string {
+    if (!dateString) return '---';
+    try {
+      const date = new Date(dateString);
+      // Sumar 6 horas para ajustar a hora de México
+      date.setHours(date.getHours() + 6);
+      // Sumar 2 segundos extra
+      date.setSeconds(date.getSeconds() + 2);
+      
+      const hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const seconds = date.getSeconds().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+      const hour12 = hours % 12 || 12;
+      return `${hour12.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+    } catch {
+      return '---';
+    }
+  }
+
+  // Formatea la fecha completa (DD/MM/YYYY)
   formatDate(dateString: string | null | undefined): string {
     if (!dateString) return '---';
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('es-MX', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     } catch {
       return '---';
     }
